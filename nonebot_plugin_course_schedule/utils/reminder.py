@@ -1,3 +1,4 @@
+import math
 import os
 from datetime import datetime, timezone, timedelta
 from typing import List, Dict
@@ -12,6 +13,7 @@ from .ics_parser import ics_parser
 async def check_and_send_reminders():
     """
     定期检查并发送课程提醒。
+    range 参数指定检查的时间范围（分钟），与 cron 的检查间隔相对应。
     """
     if not config.course_reminder_enabled:
         return
@@ -20,9 +22,10 @@ async def check_and_send_reminders():
     now = datetime.now(shanghai_tz)
     
     # 提醒时间点：当前时间 + 偏移量
-    # 检查在 (now + offset) 这一分钟内开始的课
+    # 检查在 (now + offset) 至 (now + offset + range) 内开始的课
     reminder_time = now + timedelta(minutes=config.course_reminder_offset)
-    logger.debug(f"正在检查 {reminder_time.strftime('%Y-%m-%d %H:%M')} 的课程提醒")
+    reminder_time_end = reminder_time + timedelta(minutes=config.course_reminder_interval)
+    logger.debug(f"正在检查 {reminder_time.strftime('%Y-%m-%d %H:%M')} 到 {reminder_time_end.strftime('%Y-%m-%d %H:%M')} 的课程提醒。")
 
     user_data: Dict[str, List[int]] = data_manager.load_user_data()
     
@@ -48,14 +51,13 @@ async def check_and_send_reminders():
             for course in courses:
                 start_time = course["start_time"]
                 
-                # 检查课程是否在 reminder_time 所在的这一分钟开始
-                if (start_time.date() == reminder_time.date() and 
-                    start_time.hour == reminder_time.hour and 
-                    start_time.minute == reminder_time.minute):
+                # 检查课程是否在 reminder_time 到 reminder_time_end 之间开始
+                if (reminder_time <= start_time < reminder_time_end):
                     
                     # 匹配成功，发送提醒
                     summary = course["summary"]
                     location = course.get("location", "未知地点")
+                    minutes_left = math.ceil((start_time - reminder_time).total_seconds() / 60)
                     
                     msg = (
                         MessageSegment.at(user_id) + 
@@ -63,11 +65,11 @@ async def check_and_send_reminders():
                         f"课程：{summary}\n"
                         f"时间：{start_time.strftime('%H:%M')}\n"
                         f"地点：{location}\n"
-                        f"还有 {config.course_reminder_offset} 分钟就要上课啦，记得做好准备哦！"
+                        f"还有 {minutes_left} 分钟就要上课啦，记得做好准备哦！"
                     )
                     
                     try:
                         await bot.send_group_msg(group_id=group_id, message=msg)
-                        logger.info(f"已发送提醒给用户 {user_id} (群 {group_id}): {summary}")
+                        logger.debug(f"已发送提醒给用户 {user_id} (群 {group_id}): {summary}")
                     except Exception as e:
                         logger.error(f"发送提醒到群 {group_id} 失败: {e}")

@@ -9,7 +9,8 @@ class Config(BaseModel):
         Path(__file__).parent / "resources" / "MapleMono-NF-CN-Medium.ttf"
     ))
     course_reminder_enabled: bool = True
-    course_reminder_offset: int = 30
+    course_reminder_offset: int = 30  # 上课前提醒提前量（分钟）
+    course_reminder_interval: int = 5 # 上课提醒检查间隔（分钟），此值不应大于 60 或 course_reminder_offset。
 # fmt:on
 
 config = get_plugin_config(Config)
