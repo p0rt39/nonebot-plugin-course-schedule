@@ -22,7 +22,7 @@ class ICSParser:
 
     def parse_ics_file(self, file_path: str) -> List[Dict]:
         """解析 .ics 文件并返回课程列表，包括重复事件。使用缓存以提高性能。"""
-        #if file_path in self.course_cache:
+        #if file_path in self.course_cache: # TODO: 这里的缓存有时候清理不掉，原因不明。此外性能瓶颈不在这里。
         #    return self.course_cache[file_path]
 
         courses = []

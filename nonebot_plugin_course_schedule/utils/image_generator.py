@@ -27,7 +27,7 @@ class ImageGenerator:
         self.font_header = self._load_font(26)
         self.font_text = self._load_font(28)
         self.font_rank = self._load_font(36)
-        self.font_subtitle = self._load_font(24)  # 添加缺失的 font_subtitle 属性
+        self.font_subtitle = self._load_font(24)
         self.user_font_main = self._load_font(28)
         self.user_font_sub = self._load_font(22)
         self.user_font_title = self._load_font(40)

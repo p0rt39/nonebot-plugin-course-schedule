@@ -125,6 +125,7 @@ async def handle_schedule_input(
                 parsed = ics_parser.parse_ics_file(ics_path)
                 if parsed == []:
                     os.remove(ics_path)
+                    ics_parser.clear_cache(ics_path)
                     raise ValueError("Not Valid ICS File.")
 
                 if group_id:
